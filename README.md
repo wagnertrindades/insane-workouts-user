@@ -1,1 +1,1 @@
-# insane-workouts-user
+# Insane Workouts - User Microservice
