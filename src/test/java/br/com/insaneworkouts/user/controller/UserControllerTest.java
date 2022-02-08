@@ -21,7 +21,7 @@ class UserControllerTest {
 	@Test
 	public void shouldReturns201WhenCreateUser() throws Exception {
 		URI uri = new URI("/user");
-		String json = "{'email': 'test@email.com', 'password': '123456', 'name': 'Xunda'}";
+		String json = "{\"email\": \"test@email.com\", \"password\": \"123456789\", \"name\": \"Xunda\"}";
 		
 		mockMvc.perform(MockMvcRequestBuilders
 				.post(uri)
