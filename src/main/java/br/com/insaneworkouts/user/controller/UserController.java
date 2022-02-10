@@ -6,6 +6,8 @@ import java.util.Optional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,19 +24,26 @@ import br.com.insaneworkouts.user.model.User;
 import br.com.insaneworkouts.user.repository.UserRepository;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
 	
 	@Autowired
 	private UserRepository userRepository;
 	
 	@PostMapping
-	@Transactional
-	public ResponseEntity<UserDto> create(@RequestBody @Valid UserForm form, UriComponentsBuilder uriBuilder) {
+	public ResponseEntity<?> create(@RequestBody @Valid UserForm form, UriComponentsBuilder uriBuilder) {
 		User user = form.converter();
-		userRepository.save(user);
 		
-		URI uri = uriBuilder.path("/user/{id}").buildAndExpand(user.getId()).toUri();
+		try {
+			userRepository.save(user);
+		} catch (DataIntegrityViolationException e) {
+			return ResponseEntity
+					.badRequest()
+					.contentType(MediaType.APPLICATION_JSON)
+					.body("{\"violations\": [{\"fieldName\": \"email\", \"message\": \"the email already exists\"}]}");
+		}
+		
+		URI uri = uriBuilder.path("/api/user/{id}").buildAndExpand(user.getId()).toUri();
 		return ResponseEntity.created(uri).body(new UserDto(user));
 	}
 	
