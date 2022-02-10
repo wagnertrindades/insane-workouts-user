@@ -65,8 +65,8 @@ class UserControllerTest {
 		.andExpect(status().isCreated())
 		.andExpect(jsonPath("$.id").isNumber())
 		.andExpect(jsonPath("$.email", is(equalTo("test@email.com"))))
-		.andExpect(jsonPath("$.password", is(equalTo("123456789"))))
-		.andExpect(jsonPath("$.name", is(equalTo("Xunda"))));
+		.andExpect(jsonPath("$.name", is(equalTo("Xunda"))))
+		.andExpect(jsonPath("$.password").doesNotExist());
 	}
 	
 	@Test
@@ -221,6 +221,48 @@ class UserControllerTest {
 		.andExpect(jsonPath("$.violations").isArray())
 		.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "email"))))
 		.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "the email already exists"))));
+	}
+	
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void detail_Should_Returns200_When_SendUserID() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+		
+		URI uri = new URI("/api/user/" + user.getId());
+		
+		mockMvc.perform(MockMvcRequestBuilders
+				.get(uri)
+				.contentType(MediaType.APPLICATION_JSON))
+		.andExpect(status().isOk());
+	}
+	
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void detail_Should_ReturnsUserDetails_When_SendUserID() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+		
+		URI uri = new URI("/api/user/" + user.getId());
+		
+		mockMvc.perform(MockMvcRequestBuilders
+				.get(uri)
+				.contentType(MediaType.APPLICATION_JSON))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.id", is(equalTo(Math.toIntExact(user.getId())))))
+		.andExpect(jsonPath("$.email", is(equalTo(user.getEmail()))))
+		.andExpect(jsonPath("$.name", is(equalTo(user.getName()))))
+		.andExpect(jsonPath("$.password").doesNotExist());
+	}
+	
+	@Test
+	public void detail_Should_Returns404_When_UserNotExists() throws Exception {
+		URI uri = new URI("/api/user/99999");
+		
+		mockMvc.perform(MockMvcRequestBuilders
+				.get(uri)
+				.contentType(MediaType.APPLICATION_JSON))
+		.andExpect(status().isNotFound());
 	}
 
 }
