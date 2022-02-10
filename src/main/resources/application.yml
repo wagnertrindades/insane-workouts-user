@@ -8,3 +8,10 @@ spring:
     password: password
     username: root
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/insane_workouts_user
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on-param
+    include-exception: true
