@@ -1,5 +1,6 @@
 package br.com.insaneworkouts.user.controller.form;
 
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -9,13 +10,13 @@ import br.com.insaneworkouts.user.model.User;
 
 public class UserForm {
 
-	@NotNull @NotEmpty @Length(min = 10)
+	@NotNull @NotEmpty @Email
 	private String email;
 	
-	@NotNull @NotEmpty @Length(min = 8)
+	@NotNull @NotEmpty @Length(min = 8, message = "length must be 8 or more")
 	private String password;
 	
-	@NotNull @NotEmpty @Length(min = 3)
+	@NotNull @NotEmpty @Length(min = 3, message = "length must be 3 or more")
 	private String name;
 
 	public String getEmail() {
