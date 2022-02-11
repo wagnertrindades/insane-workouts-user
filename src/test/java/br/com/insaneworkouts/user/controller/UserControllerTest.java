@@ -4,10 +4,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.net.URI;
+import java.util.Optional;
 
 import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.Test;
@@ -418,4 +420,45 @@ class UserControllerTest {
 				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "length must be 3 or more"))));
 	}
 
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void delete_Should_Returns204_When_SendUserID() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+
+		URI uri = new URI("/api/user/" + user.getId());
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.delete(uri)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNoContent());
+	}
+
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void delete_Should_UserDataDeleteDatabase_When_DeleteUser() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+
+		URI uri = new URI("/api/user/" + user.getId());
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.delete(uri)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNoContent());
+
+		Optional<User> userDeleted = userRepository.findById(user.getId());
+
+		assertFalse(userDeleted.isPresent());
+	}
+
+	@Test
+	public void delete_Should_Returns404_When_UserNotExists() throws Exception {
+		URI uri = new URI("/api/user/99999");
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.delete(uri)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNotFound());
+	}
 }

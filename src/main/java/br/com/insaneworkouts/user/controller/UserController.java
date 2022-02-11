@@ -10,13 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import br.com.insaneworkouts.user.controller.dto.UserDto;
@@ -71,6 +65,19 @@ public class UserController {
 			userRepository.save(user);
 
 			return ResponseEntity.ok(new UserDto(user));
+		}
+
+		return ResponseEntity.notFound().build();
+	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> delete(@PathVariable Long id) {
+		Optional<User> optional = userRepository.findById(id);
+
+		if (optional.isPresent()) {
+			userRepository.deleteById(id);
+
+			return ResponseEntity.noContent().build();
 		}
 
 		return ResponseEntity.notFound().build();
