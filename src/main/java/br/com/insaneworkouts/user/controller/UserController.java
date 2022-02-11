@@ -5,14 +5,15 @@ import java.util.Optional;
 
 import javax.validation.Valid;
 
+import br.com.insaneworkouts.user.controller.form.UserUpdateForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,11 +51,29 @@ public class UserController {
 	@GetMapping("/{id}")
 	public ResponseEntity<UserDto> detail(@PathVariable Long id) {
 		Optional<User> optional = userRepository.findById(id);
-		
+
 		if (optional.isPresent()) {
 			return ResponseEntity.ok(new UserDto(optional.get()));
 		}
-		
+
 		return ResponseEntity.notFound().build();
 	}
+
+	@PutMapping("/{id}")
+	public ResponseEntity<UserDto> update(@PathVariable Long id, @RequestBody @Valid UserUpdateForm form) {
+		Optional<User> optional = userRepository.findById(id);
+
+		if (optional.isPresent()) {
+			User user = optional.get();
+			user.setName(form.getName());
+			user.setPassword(form.getPassword());
+
+			userRepository.save(user);
+
+			return ResponseEntity.ok(new UserDto(user));
+		}
+
+		return ResponseEntity.notFound().build();
+	}
+
 }

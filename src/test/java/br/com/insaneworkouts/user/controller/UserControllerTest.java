@@ -3,6 +3,7 @@ package br.com.insaneworkouts.user.controller;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -258,6 +259,163 @@ class UserControllerTest {
 				.get(uri)
 				.contentType(MediaType.APPLICATION_JSON))
 		.andExpect(status().isNotFound());
+	}
+
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void update_Should_Returns200_When_UpdateUser() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+
+		URI uri = new URI("/api/user/" + user.getId());
+		String json = "{\"password\": \"987654321\", \"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void update_Should_ReturnsUserDataUpdated_When_UpdateUser() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+
+		URI uri = new URI("/api/user/" + user.getId());
+		String json = "{\"password\": \"987654321\", \"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.email", is(equalTo(user.getEmail()))))
+				.andExpect(jsonPath("$.name", is(equalTo("Mussum"))));
+	}
+
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void update_Should_UserDataUpdateDatabase_When_UpdateUser() throws Exception {
+		User user = new User("test@email.com", "123456789", "Xunda");
+		userRepository.save(user);
+
+		URI uri = new URI("/api/user/" + user.getId());
+		String json = "{\"password\": \"987654321\", \"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+
+		User userUpdated = userRepository.findById(user.getId()).get();
+
+		assertEquals("987654321", userUpdated.getPassword());
+		assertEquals("Mussum", userUpdated.getName());
+	}
+
+	@Test
+	public void update_Should_Returns404_When_UserNotExists() throws Exception {
+		URI uri = new URI("/api/user/99999");
+		String json = "{\"password\": \"987654321\", \"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNotFound());
+	}
+
+	@Test
+	public void update_Should_Returns400_When_NotHasPassword() throws Exception {
+		URI uri = new URI("/api/user/1");
+		String json = "{\"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations").isArray())
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "password"))))
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "must not be null"))));
+	}
+
+	@Test
+	public void update_Should_Returns400_When_NotHasName() throws Exception {
+		URI uri = new URI("/api/user/1");
+		String json = "{\"password\": \"987654321\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations").isArray())
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "name"))))
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "must not be null"))));
+	}
+
+	@Test
+	public void update_Should_Returns400_When_PasswordIsBlank() throws Exception {
+		URI uri = new URI("/api/user/1");
+		String json = "{\"password\": \"\", \"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations").isArray())
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "password"))))
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "must not be empty"))));
+	}
+
+	@Test
+	public void update_Should_Returns400_When_NameIsBlank() throws Exception {
+		URI uri = new URI("/api/user/1");
+		String json = "{\"password\": \"987654321\", \"name\": \"\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations").isArray())
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "name"))))
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "must not be empty"))));
+	}
+
+	@Test
+	public void update_Should_Returns400_When_PasswordLengthLowerThen8() throws Exception {
+		URI uri = new URI("/api/user/1");
+		String json = "{\"password\": \"7654321\", \"name\": \"Mussum\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations").isArray())
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "password"))))
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "length must be 8 or more"))));
+	}
+
+	@Test
+	public void update_Should_Returns400_When_NameLengthLowerThen3() throws Exception {
+		URI uri = new URI("/api/user/1");
+		String json = "{\"password\": \"987654321\", \"name\": \"Mu\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.put(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.violations").isArray())
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("fieldName", "name"))))
+				.andExpect(jsonPath("$.violations", hasItem(IsMapContaining.hasEntry("message", "length must be 3 or more"))));
 	}
 
 }
