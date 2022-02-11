@@ -3,8 +3,7 @@ package br.com.insaneworkouts.user.controller;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +51,7 @@ class UserControllerTest {
 	
 	@Test
 	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
-	public void create_Should_ReturnsUserDetails_When_CreateUser() throws Exception {
+	public void create_Should_ReturnsUserData_When_CreateUser() throws Exception {
 		URI uri = new URI("/api/user");
 		String json = "{\"email\": \"test@email.com\", \"password\": \"123456789\", \"name\": \"Xunda\"}";
 		
@@ -60,7 +59,6 @@ class UserControllerTest {
 				.post(uri)
 				.content(json)
 				.contentType(MediaType.APPLICATION_JSON))
-		.andExpect(status().isCreated())
 		.andExpect(jsonPath("$.id").isNumber())
 		.andExpect(jsonPath("$.email", is(equalTo("test@email.com"))))
 		.andExpect(jsonPath("$.name", is(equalTo("Xunda"))))
@@ -237,7 +235,7 @@ class UserControllerTest {
 	
 	@Test
 	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
-	public void detail_Should_ReturnsUserDetails_When_SendUserID() throws Exception {
+	public void detail_Should_ReturnsUserData_When_SendUserID() throws Exception {
 		User user = new User("test@email.com", "123456789", "Xunda");
 		userRepository.save(user);
 		
@@ -246,7 +244,6 @@ class UserControllerTest {
 		mockMvc.perform(MockMvcRequestBuilders
 				.get(uri)
 				.contentType(MediaType.APPLICATION_JSON))
-		.andExpect(status().isOk())
 		.andExpect(jsonPath("$.id", is(equalTo(Math.toIntExact(user.getId())))))
 		.andExpect(jsonPath("$.email", is(equalTo(user.getEmail()))))
 		.andExpect(jsonPath("$.name", is(equalTo(user.getName()))))
@@ -292,7 +289,6 @@ class UserControllerTest {
 						.put(uri)
 						.content(json)
 						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.email", is(equalTo(user.getEmail()))))
 				.andExpect(jsonPath("$.name", is(equalTo("Mussum"))));
 	}
@@ -309,13 +305,19 @@ class UserControllerTest {
 		mockMvc.perform(MockMvcRequestBuilders
 						.put(uri)
 						.content(json)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk());
+						.contentType(MediaType.APPLICATION_JSON)
+		);
 
-		User userUpdated = userRepository.findById(user.getId()).get();
+		Optional<User> optionalUser = userRepository.findById(user.getId());
 
-		assertEquals("987654321", userUpdated.getPassword());
-		assertEquals("Mussum", userUpdated.getName());
+		if(optionalUser.isPresent()) {
+			User userUpdated = optionalUser.get();
+
+			assertEquals("987654321", userUpdated.getPassword());
+			assertEquals("Mussum", userUpdated.getName());
+		} else {
+			fail("User not found");
+		}
 	}
 
 	@Test
@@ -444,8 +446,8 @@ class UserControllerTest {
 
 		mockMvc.perform(MockMvcRequestBuilders
 						.delete(uri)
-						.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNoContent());
+						.contentType(MediaType.APPLICATION_JSON)
+		);
 
 		Optional<User> userDeleted = userRepository.findById(user.getId());
 
