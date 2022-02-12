@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: 'user'
   jpa:
     show-sql: true
     hibernate:
@@ -10,8 +12,16 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/insane_workouts_user
 
 server:
+  port: 8080
   error:
     include-message: always
     include-binding-errors: always
     include-stacktrace: on-param
     include-exception: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
