@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -24,10 +25,18 @@ public class UserController {
 	
 	@Autowired
 	private UserRepository userRepository;
-	
+
+	private final PasswordEncoder encoder;
+
+	public UserController(PasswordEncoder encoder) {
+		this.encoder = encoder;
+	}
+
 	@PostMapping
 	public ResponseEntity<?> create(@RequestBody @Valid UserForm form, UriComponentsBuilder uriBuilder) {
 		User user = form.converter();
+
+		user.setPassword(encoder.encode(user.getPassword()));
 		
 		try {
 			userRepository.save(user);
@@ -60,7 +69,7 @@ public class UserController {
 		if (optional.isPresent()) {
 			User user = optional.get();
 			user.setName(form.getName());
-			user.setPassword(form.getPassword());
+			user.setPassword(encoder.encode(form.getPassword()));
 
 			userRepository.save(user);
 

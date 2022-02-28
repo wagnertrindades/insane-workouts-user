@@ -64,6 +64,29 @@ class UserControllerTest {
 		.andExpect(jsonPath("$.name", is(equalTo("Xunda"))))
 		.andExpect(jsonPath("$.password").doesNotExist());
 	}
+
+	@Test
+	@DirtiesContext(methodMode = MethodMode.AFTER_METHOD)
+	public void create_Should_SavePasswordEncrypted_When_CreateUser() throws Exception {
+		URI uri = new URI("/api/user");
+		String json = "{\"email\": \"test@email.com\", \"password\": \"123456789\", \"name\": \"Xunda\"}";
+
+		mockMvc.perform(MockMvcRequestBuilders
+						.post(uri)
+						.content(json)
+						.contentType(MediaType.APPLICATION_JSON));
+
+		Optional<User> optionalUser = userRepository.findByEmail("test@email.com");
+
+		if(optionalUser.isPresent()) {
+			User userCreated = optionalUser.get();
+
+			assertNotEquals("123456789", userCreated.getPassword());
+			assertEquals("Xunda", userCreated.getName());
+		} else {
+			fail("User not found");
+		}
+	}
 	
 	@Test
 	public void create_Should_Returns400_When_NotHasEmail() throws Exception {
@@ -313,7 +336,7 @@ class UserControllerTest {
 		if(optionalUser.isPresent()) {
 			User userUpdated = optionalUser.get();
 
-			assertEquals("987654321", userUpdated.getPassword());
+			assertNotEquals("123456789", userUpdated.getPassword());
 			assertEquals("Mussum", userUpdated.getName());
 		} else {
 			fail("User not found");
