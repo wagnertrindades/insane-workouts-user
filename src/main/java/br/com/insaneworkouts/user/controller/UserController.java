@@ -6,7 +6,6 @@ import java.util.Optional;
 import javax.validation.Valid;
 
 import br.com.insaneworkouts.user.controller.form.UserUpdateForm;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +21,12 @@ import br.com.insaneworkouts.user.repository.UserRepository;
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
-	
-	@Autowired
-	private UserRepository userRepository;
 
+	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 
-	public UserController(PasswordEncoder encoder) {
+	public UserController(UserRepository userRepository, PasswordEncoder encoder) {
+		this.userRepository = userRepository;
 		this.encoder = encoder;
 	}
 
